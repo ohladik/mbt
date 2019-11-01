@@ -2,6 +2,8 @@
 
 import React, { useReducer, useEffect } from 'react';
 import styled from 'styled-components';
+import { Machine } from "xstate";
+import { useMachine } from "@xstate/react";
 
 function useKeyDown(key, onKeyDown) {
   useEffect(() => {
@@ -154,14 +156,66 @@ function ThanksScreen({ onClose }) {
   );
 }
 
+const feedbackMachine = Machine({
+  initial: 'question',
+  states: {
+    question: {
+      on: {
+        GOOD: 'thanks',
+        BAD: 'form',
+        // CLOSE: 'closed',
+      }
+    },
+    form: {
+      on: {
+        SUBMIT: 'thanks',
+        // CLOSE: 'closed',
+      }
+    },
+    thanks: {
+      on: {
+        // CLOSE: 'closed',
+      }
+    },
+    closed: {}
+  },
+  on: {
+    CLOSE: '.closed'
+  }
+});
+
 function feedbackReducer(state, event) {
-  // Write your reducer here
+  const nextState = feedbackMachine.transition(state, event);
+
+  return nextState;
+  // switch (state) {
+  //   case 'question':
+  //     switch (event.type) {
+  //       case 'GOOD':
+  //         return 'thanks';
+  //       case 'BAD':
+  //         return 'form';
+  //       case 'CLOSE':
+  //         return 'closed';
+  //       default:
+  //         return state;
+  //     }
+
+  //   case 'form':
+
+  //   case 'thanks':
+
+  //   case 'closed':
+  //   default: 
+  //     return state;
+  // }
 }
 
 function Feedback() {
-  const [state, dispatch] = useReducer(feedbackReducer, 'question');
+  const [state, dispatch] = useMachine(feedbackMachine);
+  // const [state, dispatch] = useReducer(feedbackReducer, feedbackMachine.initialState);
 
-  switch (state) {
+  switch (state.value) {
     case 'question':
       return (
         <QuestionScreen
